@@ -1,1 +1,120 @@
+import random
+import requests
+import re
 
+class Peixe:
+    def __init__(self, id_peixe, especie, peso):
+        self.id_peixe = id_peixe
+        self.especie = especie
+        self.peso = peso
+        self.proximo = None
+
+class Mochila:
+    def __init__(self, slots):
+        self.slots = slots
+        self.tabela = [None] * self.slots
+        self.total_pescado = 0
+
+    def _hash(self, id_peixe):
+        # O Hash garante que o peixe seja guardado num compartimento específico
+        return id_peixe % self.slots
+
+    def guardar(self, peixe):
+        indice = self._hash(peixe.id_peixe)
+        if self.tabela[indice] is None:
+            self.tabela[indice] = peixe
+        else:
+            # Tratamento de colisão: adiciona ao final da lista no slot
+            atual = self.tabela[indice]
+            while atual.proximo:
+                atual = atual.proximo
+            atual.proximo = peixe
+        self.total_pescado += 1
+
+    def listar_conteudo(self):
+        print(f"\n--- 🎒 CONTEÚDO DA MOCHILA ({self.total_pescado} peixes) ---")
+        for i in range(self.slots):
+            if self.tabela[i]:
+                peixes_no_slot = []
+                atual = self.tabela[i]
+                while atual:
+                    peixes_no_slot.append(f"[{atual.especie} ID:{atual.id_peixe}]")
+                    atual = atual.proximo
+                print(f"Slot {i}: {' -> '.join(peixes_no_slot)}")
+            else:
+                print(f"Slot {i}: [Vazio]")
+
+def buscar_especies():
+    print("🌐 Conectando ao banco de dados marinho...")
+    try:
+        url = "https://www.fishwatch.gov/api/species"
+        resposta = requests.get(url, timeout=5)
+        dados = response_json = resposta.json()
+        return [re.sub('<[^<]+?>', '', p.get('Species Name', 'Peixe')) for p in dados]
+    except:
+        return ["Tambaqui", "Pacu", "Pirarucu", "Tilápia", "Tucunaré"]
+
+def pesca_em_massa(mochila, especies, quantidade=1000):
+    print(f"\n⛴️  Iniciando por rede de {quantidade} peixes...")
+    for _ in range(quantidade):
+        id_gerado = random.randint(10000, 999999) # Range maior para evitar colisões de ID
+        especie = random.choice(especies)
+        peso = round(random.uniform(0.1, 50.0), 2)
+        
+        novo_peixe = Peixe(id_gerado, especie, peso)
+        mochila.guardar(novo_peixe)
+    print(f"✅ Operação concluída! {quantidade} peixes adicionados à mochila.")
+
+def pescar_um_peixe(mochila, especies):
+    print("\n🎣 Jogando a linha...")
+    id_gerado = random.randint(10000, 99999)
+    especie = random.choice(especies)
+    peso = round(random.uniform(0.1, 30.0), 2)
+    
+    novo_peixe = Peixe(id_gerado, especie, peso)
+    print(f"✨ FISGOU: {especie} ({peso}kg) | ID: {id_gerado}")
+    
+    if input("Guardar? (s/n): ").lower() == 's':
+        mochila.guardar(novo_peixe)
+        print("✅ Guardado!")
+
+def mini_game():
+    # Aumentei os slots para 50 para distribuir melhor os 1000 peixes
+    mochila = Mochila(slots=50) 
+    especies = buscar_especies()
+    
+    while True:
+        print("\n" + "="*30)
+        print(f"MOCHILA ATUAL: {mochila.total_pescado} PEIXES")
+        print("[1] Pescar um peixe")
+        print("[2] Pescar com rede (1000 peixes)")
+        print("[3] Ver mochila")
+        print("[4] Buscar peixe de acordo com sua etiqueta")
+        print("[5] Sair")
+        
+        opcao = input("Escolha: ")
+        
+        if opcao == '1':
+            pescar_um_peixe(mochila, especies)
+        elif opcao == '2':
+            pesca_em_massa(mochila, especies)
+        elif opcao == '3':
+            mochila.listar_conteudo()
+        elif opcao == '4':
+            try:
+                bid = int(input("ID do peixe: "))
+                idx = mochila._hash(bid)
+                atual = mochila.tabela[idx]
+                achou = False
+                while atual:
+                    if atual.id_peixe == bid:
+                        print(f"🔍 Achado no Slot {idx}: {atual.especie} ({atual.peso}kg)")
+                        achou = True; break
+                    atual = atual.proximo
+                if not achou: print("❌ Não encontrado.")
+            except: print("ID inválido.")
+        elif opcao == '5':
+            break
+
+if __name__ == "__main__":
+    mini_game()
