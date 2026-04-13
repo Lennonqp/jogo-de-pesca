@@ -277,7 +277,7 @@ def mini_game():
         print("  [6] Estatísticas da mochila")
         print("  [7] Ver especies")
         print("  [8] Benchmark (hash vs linear)")
-        print("  [0] Limpar mochila")          # ← NOVO
+        print("  [0] Limpar mochila") 
         print("  [9] Sair")
 
         opcao = input("  Escolha: ").strip()
@@ -295,7 +295,7 @@ def mini_game():
         elif opcao == '6': mochila.estatisticas()
         elif opcao == '7': listar_especies()
         elif opcao == '8': benchmark(mochila)
-        elif opcao == '0': limpar_mochila(mochila)   # ← NOVO
+        elif opcao == '0': limpar_mochila(mochila)
         elif opcao == '9': print("Ate logo!"); break
         else: print("  Opcao invalida.")
 
